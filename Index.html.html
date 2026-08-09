@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en-NZ">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Weekly Pay Ledger — NZ Contractor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #141d18;
+    --bg-2: #0f1713;
+    --paper: #faf6ea;
+    --paper-2: #f1ead6;
+    --ink: #1d261f;
+    --ink-soft: #4c5850;
+    --brass: #a9812e;
+    --brass-dark: #7c5f22;
+    --rust: #9a3c26;
+    --rust-soft: #c9917f;
+    --line: #cdc4a8;
+    --green-line: #3a4a3e;
+  }
+  *{ box-sizing: border-box; }
+  body{
+    margin:0;
+    background: radial-gradient(ellipse at top, #1b2a22 0%, var(--bg) 45%, var(--bg-2) 100%);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    padding: 28px 14px 60px;
+    min-height: 100vh;
+  }
+  .wrap{ max-width: 520px; margin: 0 auto; }
+
+  .eyebrow{
+    text-align:center;
+    color: var(--brass);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  h1{
+    text-align:center;
+    color: var(--paper);
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: clamp(26px, 6vw, 34px);
+    line-height: 1.15;
+    margin: 0 0 6px;
+  }
+  .sub{
+    text-align:center;
+    color: #a9b8ac;
+    font-size: 13.5px;
+    margin: 0 0 26px;
+    line-height:1.5;
+  }
+
+  .slip{
+    background: var(--paper);
+    border-radius: 14px;
+    padding: 24px 20px 22px;
+    box-shadow: 0 18px 40px -12px rgba(0,0,0,0.55);
+  }
+
+  .field{ margin-bottom: 18px; }
+  .field:last-child{ margin-bottom: 0; }
+  label{
+    display:block;
+    font-size: 11.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--ink-soft);
+    margin-bottom: 7px;
+  }
+  .hint{
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-top: 6px;
+    line-height:1.45;
+  }
+
+  .amount-input{
+    display:flex;
+    align-items:center;
+    border: 1.5px solid var(--line);
+    border-radius: 10px;
+    background: #fff;
+    overflow:hidden;
+  }
+  .amount-input span{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 20px;
+    color: var(--ink-soft);
+    padding: 0 4px 0 14px;
+  }
+  .amount-input input{
+    flex:1;
+    border:0;
+    outline:0;
+    background:transparent;
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--ink);
+    padding: 13px 14px 13px 4px;
+    width: 100%;
+    -moz-appearance: textfield;
+  }
+  .amount-input input::-webkit-outer-spin-button,
+  .amount-input input::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
+
+  .seg{
+    display:flex;
+    border: 1.5px solid var(--line);
+    border-radius: 10px;
+    overflow:hidden;
+  }
+  .seg button{
+    flex:1;
+    padding: 11px 8px;
+    border:0;
+    background: #fff;
+    font-family:'Inter',sans-serif;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    cursor:pointer;
+    border-right: 1.5px solid var(--line);
+    transition: background .15s, color .15s;
+  }
+  .seg button:last-child{ border-right:0; }
+  .seg button.active{
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  select{
+    width:100%;
+    border: 1.5px solid var(--line);
+    border-radius: 10px;
+    background:#fff;
+    padding: 12px 14px;
+    font-family:'Inter',sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink);
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9'%3E%3Cpath d='M1 1l6 6 6-6' stroke='%234c5850' stroke-width='1.8' fill='none' fill-rule='evenodd'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;
+    background-position: right 14px center;
+  }
+
+  .custom-rate{
+    margin-top: 10px;
+    display:none;
+  }
+  .custom-rate.show{ display:block; }
+  .custom-rate .amount-input input{ font-size:18px; }
+
+  .check-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    border: 1.5px solid var(--line);
+    border-radius: 10px;
+    padding: 12px 14px;
+    background:#fff;
+  }
+  .check-row .label-txt{
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .check-row .label-sub{
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    margin-top: 2px;
+    font-weight:400;
+    text-transform:none;
+    letter-spacing:0;
+  }
+  .switch{
+    position:relative;
+    width: 42px; height: 24px;
+    flex-shrink:0;
+  }
+  .switch input{ opacity:0; width:0; height:0; }
+  .switch .track{
+    position:absolute; inset:0;
+    background: #d9d2bb;
+    border-radius: 999px;
+    transition: background .15s;
+    cursor:pointer;
+  }
+  .switch .track::after{
+    content:'';
+    position:absolute;
+    left:3px; top:3px;
+    width:18px; height:18px;
+    background:#fff;
+    border-radius:50%;
+    transition: transform .15s;
+    box-shadow: 0 1px 3px rgba(0,0,0,.3);
+  }
+  .switch input:checked + .track{ background: var(--brass); }
+  .switch input:checked + .track::after{ transform: translateX(18px); }
+
+  .small-num input{ font-size:18px; }
+
+  /* Perforated tear */
+  .tear{
+    display:flex;
+    align-items:center;
+    margin: 4px 0;
+  }
+  .tear .dash{
+    flex:1;
+    border-top: 2px dashed rgba(250,246,234,0.28);
+  }
+  .tear .hole{
+    width:16px;height:16px;border-radius:50%;
+    background: var(--bg);
+    margin: 0 -8px;
+    box-shadow: 0 0 0 1px rgba(250,246,234,0.28);
+  }
+
+  .ledger{
+    background: var(--paper-2);
+    border-radius: 14px;
+    padding: 22px 20px 24px;
+    box-shadow: 0 18px 40px -12px rgba(0,0,0,0.55);
+  }
+  .ledger h2{
+    font-family:'Fraunces', serif;
+    font-weight:500;
+    font-size: 16px;
+    color: var(--ink);
+    margin: 0 0 12px;
+    letter-spacing: 0.2px;
+  }
+  .line-item{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    padding: 8px 0;
+    border-bottom: 1px dotted var(--line);
+    font-size: 14px;
+  }
+  .line-item .lbl{ color: var(--ink); font-weight:500; }
+  .line-item .lbl .note{ display:block; font-size:11px; color:var(--ink-soft); font-weight:400; margin-top:1px; }
+  .line-item .val{ font-family:'IBM Plex Mono', monospace; font-weight:600; }
+  .line-item .val.minus{ color: var(--rust); }
+  .line-item .val.plus{ color: var(--ink-soft); }
+
+  .total-stamp{
+    margin-top: 16px;
+    text-align:center;
+    padding: 18px 10px 16px;
+    border: 2px solid var(--brass);
+    border-radius: 12px;
+    transform: rotate(-0.6deg);
+    position:relative;
+    background: rgba(169,129,46,0.06);
+  }
+  .total-stamp .tlabel{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 10.5px;
+    letter-spacing: 2.5px;
+    text-transform:uppercase;
+    color: var(--brass-dark);
+    margin-bottom:6px;
+  }
+  .total-stamp .tval{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size: 34px;
+    color: var(--ink);
+  }
+
+  .ledger.dim{ margin-top: 18px; }
+  .ledger.dim .total-stamp{
+    border-color: var(--rust);
+    background: rgba(154,60,38,0.06);
+  }
+  .ledger.dim .total-stamp .tlabel{ color: var(--rust); }
+
+  footer{
+    max-width:520px;
+    margin: 20px auto 0;
+    color: #8a998e;
+    font-size: 11.5px;
+    line-height: 1.6;
+    text-align:center;
+    padding: 0 8px;
+  }
+  footer a{ color: var(--brass); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Weekly Pay Ledger · Aotearoa NZ</div>
+  <h1>What actually lands in your account</h1>
+  <p class="sub">For contractors on schedular or direct-invoice payments. Update the figures each week as your invoice changes.</p>
+
+  <div class="slip">
+    <div class="field">
+      <label for="invoice">This week's invoice (excl. GST)</label>
+      <div class="amount-input">
+        <span>$</span>
+        <input type="number" id="invoice" inputmode="decimal" placeholder="0.00" value="1500">
+      </div>
+    </div>
+
+    <div class="field">
+      <label>GST registered?</label>
+      <div class="seg" id="gstSeg">
+        <button data-val="no" class="active">Not registered</button>
+        <button data-val="yes">Registered (+15%)</button>
+      </div>
+      <div class="hint" id="gstHint">Under $60k/yr you don't have to register — but you can choose to.</div>
+    </div>
+
+    <div class="field">
+      <label for="wt">How is tax withheld from your pay?</label>
+      <select id="wt">
+        <option value="0">Not withheld — I invoice directly, pay tax myself</option>
+        <option value="0.20" selected>IR330C on file — standard rate 20%</option>
+        <option value="custom">IR330C on file — my own nominated rate</option>
+        <option value="0.45">No IR330C on file — 45% (no-notification rate)</option>
+      </select>
+      <div class="custom-rate" id="customWrap">
+        <div class="amount-input">
+          <input type="number" id="customRate" inputmode="decimal" placeholder="e.g. 25" min="10" max="50">
+          <span style="padding-right:14px;">%</span>
+        </div>
+      </div>
+      <div class="hint">This is the rate your payer deducts before paying you — it only applies to schedular payments, not GST.</div>
+    </div>
+
+    <div class="field">
+      <div class="check-row">
+        <div>
+          <div class="label-txt">Student loan</div>
+          <div class="label-sub">Set aside 12% above $464/week</div>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="loan">
+          <span class="track"></span>
+        </label>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="kiwisaver">Voluntary KiwiSaver set-aside</label>
+      <div class="amount-input small-num">
+        <input type="number" id="kiwisaver" inputmode="decimal" placeholder="0" value="0" min="0" max="100">
+        <span style="padding-right:14px;">%</span>
+      </div>
+      <div class="hint">Optional. As a contractor there's no employer match — this just earmarks part of your pay.</div>
+    </div>
+
+    <div class="field">
+      <label for="annual">Estimated annual contracting income <span style="text-transform:none;font-weight:400;">(optional)</span></label>
+      <div class="amount-input">
+        <span>$</span>
+        <input type="number" id="annual" inputmode="decimal" placeholder="leave blank to estimate from this week ×52">
+      </div>
+      <div class="hint">Since your pay fluctuates, entering a realistic annual figure gives a far more accurate tax set-aside than guessing from one week.</div>
+    </div>
+  </div>
+
+  <div class="tear"><div class="hole"></div><div class="dash"></div><div class="hole"></div></div>
+
+  <div class="ledger">
+    <h2>What hits your bank account</h2>
+    <div class="line-item">
+      <div class="lbl">Invoice amount<span class="note">your fee, excl. GST</span></div>
+      <div class="val" id="l-base">$0.00</div>
+    </div>
+    <div class="line-item">
+      <div class="lbl">GST collected<span class="note">added to the invoice, not your income</span></div>
+      <div class="val plus" id="l-gst">$0.00</div>
+    </div>
+    <div class="line-item">
+      <div class="lbl">Withholding tax deducted<span class="note" id="l-wt-note">at your selected rate</span></div>
+      <div class="val minus" id="l-wt">– $0.00</div>
+    </div>
+    <div class="total-stamp">
+      <div class="tlabel">Deposited to your account</div>
+      <div class="tval" id="l-deposit">$0.00</div>
+    </div>
+  </div>
+
+  <div class="ledger dim">
+    <h2>Tax-time reality check</h2>
+    <div class="line-item">
+      <div class="lbl">GST to set aside<span class="note">owed to IRD, paid quarterly</span></div>
+      <div class="val minus" id="r-gst">– $0.00</div>
+    </div>
+    <div class="line-item">
+      <div class="lbl">Income tax + ACC levy owed<span class="note">based on annualised income</span></div>
+      <div class="val minus" id="r-tax">– $0.00</div>
+    </div>
+    <div class="line-item">
+      <div class="lbl">Already covered by withholding</div>
+      <div class="val plus" id="r-covered">+ $0.00</div>
+    </div>
+    <div class="line-item">
+      <div class="lbl">Student loan set-aside</div>
+      <div class="val minus" id="r-loan">– $0.00</div>
+    </div>
+    <div class="line-item">
+      <div class="lbl">KiwiSaver set-aside</div>
+      <div class="val minus" id="r-kiwi">– $0.00</div>
+    </div>
+    <div class="total-stamp">
+      <div class="tlabel">Safe to actually spend</div>
+      <div class="tval" id="r-safe">$0.00</div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  Figures use 2025–26 IRD tax brackets (10.5% / 17.5% / 30% / 33% / 39%), the 1.67% ACC earner's levy (capped at $152,790 insurable earnings) and the $24,128/yr student loan threshold. This is an estimate for budgeting only, not tax advice — confirm your position with IRD or an accountant, especially if you pay provisional tax.
+</footer>
+
+<script>
+  const $ = id => document.getElementById(id);
+  const nf = n => (isFinite(n)?n:0).toLocaleString('en-NZ', {style:'currency', currency:'NZD'});
+
+  let gstOn = false;
+
+  document.querySelectorAll('#gstSeg button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('#gstSeg button').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      gstOn = btn.dataset.val === 'yes';
+      $('gstHint').textContent = gstOn
+        ? "You charge 15% on top and must pay it to IRD — it never counts as your income."
+        : "Under $60k/yr you don't have to register — but you can choose to.";
+      calc();
+    });
+  });
+
+  $('wt').addEventListener('change', ()=>{
+    $('customWrap').classList.toggle('show', $('wt').value === 'custom');
+    calc();
+  });
+
+  ['invoice','customRate','kiwisaver','annual'].forEach(id=>{
+    $(id).addEventListener('input', calc);
+  });
+  $('loan').addEventListener('change', calc);
+
+  function annualTax(income){
+    const bands = [
+      [0, 15600, 0.105],
+      [15600, 53500, 0.175],
+      [53500, 78100, 0.30],
+      [78100, 180000, 0.33],
+      [180000, Infinity, 0.39]
+    ];
+    let tax = 0;
+    for(const [lo, hi, rate] of bands){
+      if(income > lo){
+        tax += (Math.min(income, hi) - lo) * rate;
+      }
+    }
+    return tax;
+  }
+
+  function calc(){
+    const base = parseFloat($('invoice').value) || 0;
+    const gst = gstOn ? base * 0.15 : 0;
+    const invoiceTotal = base + gst;
+
+    let wtRate = 0;
+    const wtSel = $('wt').value;
+    if(wtSel === 'custom'){
+      wtRate = (parseFloat($('customRate').value) || 0) / 100;
+    } else {
+      wtRate = parseFloat(wtSel) || 0;
+    }
+    const wtAmount = base * wtRate;
+    const deposit = invoiceTotal - wtAmount;
+
+    $('l-base').textContent = nf(base);
+    $('l-gst').textContent = gstOn ? '+ ' + nf(gst) : nf(0);
+    $('l-wt').textContent = '– ' + nf(wtAmount);
+    $('l-wt-note').textContent = wtRate > 0 ? `${(wtRate*100).toFixed(1)}% of $${base.toFixed(2)}` : 'no withholding selected';
+    $('l-deposit').textContent = nf(deposit);
+
+    // Reality check
+    const annualInput = parseFloat($('annual').value);
+    const annualIncome = annualInput > 0 ? annualInput : base * 52;
+
+    const aTax = annualTax(annualIncome);
+    const accCap = 152790;
+    const aAcc = Math.min(annualIncome, accCap) * 0.0167;
+    const weeklyTax = (aTax + aAcc) / 52;
+
+    const loanOn = $('loan').checked;
+    const weeklyLoan = loanOn ? Math.max(0, base - 464) * 0.12 : 0;
+
+    const kiwiPct = (parseFloat($('kiwisaver').value) || 0) / 100;
+    const weeklyKiwi = base * kiwiPct;
+
+    const covered = Math.min(wtAmount, weeklyTax);
+
+    $('r-gst').textContent = '– ' + nf(gst);
+    $('r-tax').textContent = '– ' + nf(weeklyTax);
+    $('r-covered').textContent = '+ ' + nf(covered);
+    $('r-loan').textContent = '– ' + nf(weeklyLoan);
+    $('r-kiwi').textContent = '– ' + nf(weeklyKiwi);
+
+    const safe = deposit - gst - Math.max(0, weeklyTax - wtAmount) - weeklyLoan - weeklyKiwi;
+    $('r-safe').textContent = nf(Math.max(0, safe));
+  }
+
+  calc();
+</script>
+</body>
+</html>
